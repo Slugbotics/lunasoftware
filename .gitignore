@@ -4,3 +4,13 @@
 .vscode/settings.json
 .vscode/ipch
 .vs/settings
+*.log
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/

@@ -1,64 +1,81 @@
-#from command import Command
-from driveTrain import Drivetrain
-from pynput import keyboard  # pip install pynput in base terminal
-'''
+from command import Command
+from driveTrain import driveTrainInstance
+from arm import armInstance
+from pynput import keyboard
+import pygame
+
+minArmAngle = 0
+maxArmAngle = 180
+armAngleRate = 2
+
+pygame.init()
+pygame.joystick.init()
+joystick = None
+if pygame.joystick.get_count() > 0:
+    joystick = pygame.joystick.Joystick(0)
+    joystick.init()
+    print(f"Joystick connected: {joystick.get_name()}")
+else:
+    print("No joystick connected. Using keyboard.")
+
 class Teleop(Command):
     def __init__(self):
-        self.drivetrain = Drivetrain()
-
+        self.drivetrain = driveTrainInstance
+        self.arm = armInstance
+        self.listener = None
+        self.keys = {'w': False}
+        self.armAngle = 90
+    
     def initialize(self):
-        print("[TELEOP] Initialized")
+        if joystick is None:
+            self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+            self.listener.start()
 
     def execute(self):
-        speed = 0.0
-        rotation = 0.0
-
-        # Basic WASD-style control
-        if keyboard.is_pressed('w'):
-            speed = 1.0
-        elif keyboard.is_pressed('s'):
-            speed = -1.0
-        if keyboard.is_pressed('a'):
-            rotation = -0.5
-        elif keyboard.is_pressed('d'):
-            rotation = 0.5
-
+        speed = 0
+        rotation = 0
+        if joystick:
+            pygame.event.pump()
+            speed = -joystick.get_axis(1)  # Invert Y axis, down is positive
+            speed = speed * abs(speed)
+            rotation = -joystick.get_axis(0)
+            rotation = rotation * abs(rotation)
+            armSpeed = -joystick.get_axis(3)
+            armSpeed = armAngleRate * armSpeed * abs(armSpeed)
+            self.armAngle += armSpeed
+        else:
+            if self.keys['w']:
+                speed = 0.5
+            if self.keys['s']:
+                speed += -0.5
+            if self.keys['a']:
+                rotation = 0.5
+            if self.keys['d']:
+                rotation += -0.5
+            if self.keys['k']:
+                self.armAngle += armAngleRate/2
+            if self.keys['j']:
+                self.armAngle -= armAngleRate/2
+        self.armAngle = max(minArmAngle, min(maxArmAngle, self.armAngle))
+        self.arm.set_angle(self.armAngle)
         self.drivetrain.drive(speed, rotation)
-
+    
     def end(self):
         self.drivetrain.stop()
-        print("[TELEOP] Ended")
-
-    def isFinished(self):
-        return False  # stays active until state changes
-
-'''
-class Teleop:
-    def __init__(self):
-        self.drivetrain = Drivetrain()
-        self.speed = 0
-        self.rotation = 0
+        if self.listener:
+            self.listener.stop()
+            self.listener = None
+        self.keys = {'w': False}
 
     def on_press(self, key):
         try:
-            if key.char == 'w':
-                self.speed = 1
-            elif key.char == 's':
-                self.speed = -1
-            elif key.char == 'a':
-                self.rotation = -0.5
-            elif key.char == 'd':
-                self.rotation = 0.5
+            # Make key lowercase
+            self.keys[key.char.lower()] = True
         except AttributeError:
             pass
-        self.drivetrain.drive(self.speed, self.rotation)
 
     def on_release(self, key):
-        if key.char in ['w', 's', 'a', 'd']:
-            self.speed = 0
-            self.rotation = 0
-            self.drivetrain.stop()
-
-    def run(self):
-        with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as listener:
-            listener.join()
+        try:
+            self.keys[key.char.lower()] = False
+        except AttributeError:
+            pass

@@ -43,23 +43,23 @@ void loop() {
   }
 }
 */
-#include <Arduino.h>
+// #include <Arduino.h>
 
-void setup() {
-  Serial.begin(9600);
-  pinMode(5, OUTPUT); // left motor
-  pinMode(6, OUTPUT); // right motor
-}
+// void setup() {
+//   Serial.begin(9600);
+//   pinMode(5, OUTPUT); // left motor
+//   pinMode(6, OUTPUT); // right motor
+// }
 
-void loop() {
-  if (Serial.available()) {
-    char cmd = Serial.read();
-    if (cmd == 'F') {
-      digitalWrite(5, HIGH);
-      digitalWrite(6, HIGH);
-    } else if (cmd == 'S') {
-      digitalWrite(5, LOW);
-      digitalWrite(6, LOW);
-    }
-  }
-}
+// void loop() {
+//   if (Serial.available()) {
+//     char cmd = Serial.read();
+//     if (cmd == 'F') {
+//       digitalWrite(5, HIGH);
+//       digitalWrite(6, HIGH);
+//     } else if (cmd == 'S') {
+//       digitalWrite(5, LOW);
+//       digitalWrite(6, LOW);
+//     }
+//   }
+// }
