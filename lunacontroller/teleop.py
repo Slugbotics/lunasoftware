@@ -1,8 +1,13 @@
 from command import Command
 from driveTrain import driveTrainInstance
 from arm import armInstance
-from pynput import keyboard
 import pygame
+
+try:
+    from pynput import keyboard
+except ImportError:
+    print("Error importing pynput. Keyboard control will not be available.")
+    keyboard = None
 
 minArmAngle = 0
 maxArmAngle = 180
@@ -27,14 +32,14 @@ class Teleop(Command):
         self.armAngle = 90
     
     def initialize(self):
-        if joystick is None:
+        if joystick is None and keyboard is not None:
             self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
             self.listener.start()
 
     def execute(self):
         speed = 0
         rotation = 0
-        if joystick:
+        if joystick is not None:
             pygame.event.pump()
             speed = -joystick.get_axis(1)  # Invert Y axis, down is positive
             speed = speed * abs(speed)
@@ -43,7 +48,7 @@ class Teleop(Command):
             armSpeed = -joystick.get_axis(3)
             armSpeed = armAngleRate * armSpeed * abs(armSpeed)
             self.armAngle += armSpeed
-        else:
+        elif keyboard is not None:
             if self.keys['w']:
                 speed = 0.5
             if self.keys['s']:
