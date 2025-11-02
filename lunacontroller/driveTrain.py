@@ -9,35 +9,33 @@ from typing import Optional
 from gpiozero import Motor
 
 def _clamp(v: float, lo: float = -1.0, hi: float = 1.0) -> float:
+    """Clamp v to the range [lo, hi]"""
     return max(lo, min(hi, v))
 
 
 class Drivetrain:
+    """
+    Represents the drivetrain subsystem.
+    """
     def __init__(self):
+        # Create motors
         self.leftMotor = Motor(forward=27, backward=22)
         self.rightMotor = Motor(forward=23, backward=24)
 
     def tank_drive(self, left: float, right: float) -> None:
-        """Send left/right tank values to the drivetrain.
+        """Drives the robot using left/right speed values.
 
-        left/right are expected in [-1.0, 1.0]; we format them to two
-        decimals when sending over serial.
+        left/right are expected in [-1.0, 1.0]
         """
         left = _clamp(left)
         right = _clamp(right)
-        if left > 0:
-            self.leftMotor.forward(left)
-        else:
-            self.leftMotor.backward(-left)
-        if right > 0:
-            self.rightMotor.forward(right)
-        else:
-            self.rightMotor.backward(-right)
+        self.leftMotor.value = left
+        self.rightMotor.value = right
 
     def drive(self, speed: float, rotation: float) -> None:
-        """Helper used by teleop: convert speed/rotation -> left/right.
-
-        A simple mixing: left = speed - rotation, right = speed + rotation.
+        """Drives the robot using speed and rotation values.
+        speed is forward/backward motion in [-1.0, 1.0]
+        rotation is rotational motion in [-1.0, 1.0]
         Counterclockwise rotation (left from robot perspective) is positive
         """
         left = speed - rotation
@@ -45,7 +43,8 @@ class Drivetrain:
         self.tank_drive(left, right)
 
     def stop(self) -> None:
-        self.drive(0.0, 0.0)
+        """Stops the drivetrain motors."""
+        self.tank_drive(0.0, 0.0)
 
 # Use this instead of creating multiple instances of Drivetrain
 driveTrainInstance = Drivetrain()    

@@ -22,13 +22,17 @@ from command import Command
 # Example: read response
 # while arduino.in_waiting > 0:
 #     print("Arduino says:", arduino.readline().decode().strip())
+
+# Create and initialize Teleop command
 command: Command = Teleop()
 command.initialize()
 try:
+    # Run the command loop at about 50 Hz
     while True:
         command.execute()
         time.sleep(0.02)  # 50 Hz update rate
 except KeyboardInterrupt:
+    # On Ctrl-C, end the command and exit the loop
     command.end()
 
 # arduino.close()

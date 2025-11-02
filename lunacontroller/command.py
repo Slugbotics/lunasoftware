@@ -1,4 +1,7 @@
 class Command:
+    """
+    Base class for robot commands.
+    """
     def initialize(self):
         pass
     def execute(self):
