@@ -12,7 +12,11 @@ class Arm:
         """
         Sets the arm servo to the specified angle.
         angle: Desired angle in degrees (0 to 180)
+        If angle is None, sets servo to free mode.
         """
+        if angle is None:
+            self.servo.angle = None
+            return
         self.angle = _clamp(angle, 0, 180)
         self.servo.angle = self.angle
 

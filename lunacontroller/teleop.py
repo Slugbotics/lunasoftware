@@ -124,6 +124,8 @@ class Teleop(Command):
     
     def end(self):
         """Runs once when the command ends"""
+        # Set arm to free mode
+        self.arm.set_angle(None)
         # Stop the drivetrain and keyboard listener
         self.drivetrain.stop()
         if self.listener:
