@@ -19,8 +19,8 @@ class Drivetrain:
     """
     def __init__(self):
         # Create motors
-        self.leftMotor = Motor(forward=27, backward=22)
-        self.rightMotor = Motor(forward=23, backward=24)
+        self.leftMotor = Motor(forward=2, backward=4, enable=3)
+        self.rightMotor = Motor(forward=23, backward=24, enable=25)
 
     def tank_drive(self, left: float, right: float) -> None:
         """Drives the robot using left/right speed values.
