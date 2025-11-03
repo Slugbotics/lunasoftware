@@ -84,7 +84,6 @@ class Teleop(Command):
             # If the joystick disconnected, set it to None and call execute again
             if not joystick.get_init():
                 print("Joystick disconnected.")
-                global joystick
                 joystick = None
                 self.execute()
                 return
