@@ -1,12 +1,14 @@
 from gpiozero import AngularServo
-from driveTrain import _clamp
+from driveTrain import _clamp, BOARD_TO_BCM
 
 class Arm:
     """Represents the robot's arm subsystem."""
     def __init__(self):
         # Create servo
         self.angle = 90
-        self.servo = AngularServo(pin=17, min_angle=0, max_angle=180, initial_angle=self.angle)
+        self.leftServo = AngularServo(pin=BOARD_TO_BCM[17], min_angle=0, max_angle=180, initial_angle=self.angle)
+        self.rightServo = AngularServo(pin=BOARD_TO_BCM[27], min_angle=0, max_angle=180, initial_angle=self.angle)
+        self.set_angle(self.angle)
     
     def set_angle(self, angle):
         """
@@ -15,9 +17,11 @@ class Arm:
         If angle is None, sets servo to free mode.
         """
         if angle is None:
-            self.servo.angle = None
+            self.leftServo.angle = None
+            self.rightServo.angle = None
             return
         self.angle = _clamp(angle, 0, 180)
-        self.servo.angle = self.angle
+        self.leftServo.angle = self.angle
+        self.rightServo.angle = self.angle
 
 armInstance = Arm()
