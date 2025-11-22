@@ -6,7 +6,7 @@ class Arm:
     def __init__(self):
         # Create servo
         self.angle = 90
-        self.leftServo = AngularServo(pin=BOARD_TO_BCM[17], min_angle=0, max_angle=180, initial_angle=self.angle)
+        self.leftServo = AngularServo(pin=BOARD_TO_BCM[22], min_angle=0, max_angle=180, initial_angle=self.angle)
         self.rightServo = AngularServo(pin=BOARD_TO_BCM[27], min_angle=0, max_angle=180, initial_angle=self.angle)
         self.set_angle(self.angle)
     

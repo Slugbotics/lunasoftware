@@ -32,17 +32,13 @@ class Teleop(Command):
         self.armAngle = 90
         self.arm.set_angle(self.armAngle)
         self.subscriber = self.node.create_subscription("controller_input", ControllerInput, self.joystick_callback, 10)
-        # ensure we have a default message so execute() can read fields immediately
-        if self.input is None:
-            self.input = ControllerInput()
+        self.input = ControllerInput()
     
     def execute(self):
         """Runs repeatedly while the command is active"""
-        # Guard against missing input
         if self.input is None:
             return
 
-        # Invert Y axis, down is positive
         speed = -self.input.left_y
         # Multiply by absolute value to make control less sensitive near 0
         # All speeds are still possible, since speed * abs(speed) covers [-1, 1]
