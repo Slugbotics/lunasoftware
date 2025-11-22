@@ -1,5 +1,5 @@
 from gpiozero import AngularServo
-from driveTrain import _clamp, BOARD_TO_BCM
+from lunacontroller.drivetrain import _clamp, BOARD_TO_BCM
 
 class Arm:
     """Represents the robot's arm subsystem."""

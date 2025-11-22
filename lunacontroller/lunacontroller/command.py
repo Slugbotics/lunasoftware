@@ -1,4 +1,7 @@
 class Command:
+    def __init__(self, node):
+        self.node = node
+    
     """
     Base class for robot commands.
     """
