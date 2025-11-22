@@ -7,6 +7,8 @@ device.
 
 from typing import Optional
 from gpiozero import Motor
+from lunacontroller.geometry import Pose2d
+from lunacontroller.geometry import Pose2d
 
 BOARD_TO_BCM = {
     1: None, 2: None, 3: 2,  4: None, 5: 3,  6: None, 7: 4,  8: 14,
@@ -58,6 +60,10 @@ class Drivetrain:
     def stop(self) -> None:
         """Stops the drivetrain motors."""
         self.tank_drive(0.0, 0.0)
+    
+    def get_pose(self) -> Pose2d:
+        # TODO: Implement this
+        return Pose2d(1, 2, 3)
 
 # Use this instead of creating multiple instances of Drivetrain
 drivetrainInstance = Drivetrain()    

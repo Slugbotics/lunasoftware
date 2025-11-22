@@ -2,6 +2,7 @@ import rclpy
 from rclpy.node import Node
 from messages.msg import ControllerInput
 import pygame
+from std_srvs.srv import Empty
 
 class ControlsNode(Node):
     def __init__(self):
@@ -9,10 +10,12 @@ class ControlsNode(Node):
         self.publisher = self.create_publisher(ControllerInput, 'controller_input', 10)
         timer_period = 0.02  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
+        self.cancel_service = self.create_client(Empty, 'cancel_command')
         pygame.init()
         pygame.joystick.init()
         self.joystick = None
         self.connect_joystick()
+        self.cancel_pressed = False
         if self.joystick is None:
             self.get_logger().warning('No joystick connected at startup.')
 
@@ -45,6 +48,12 @@ class ControlsNode(Node):
             msg.dpad_right = hat[0] == 1
 
         self.publisher.publish(msg)
+        cancel = msg.back
+        if cancel and not self.cancel_pressed:
+            self.cancel_service.call_async(Empty.Request())
+            self.cancel_pressed = True
+        elif not cancel and self.cancel_pressed:
+            self.cancel_pressed = False
     
     def connect_joystick(self):
         if pygame.joystick.get_count() > 0 and self.joystick is None:

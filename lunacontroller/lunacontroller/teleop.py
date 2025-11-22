@@ -67,3 +67,19 @@ class Teleop(Command):
 
     def joystick_callback(self, msg):
         self.input = msg
+    
+    """
+    Other button mapping:
+    A = dig
+    B = dump
+    X = drive across obstacle field
+    Y = autonomous mode
+    """
+    def dig_selected(self):
+        return self.input.a
+    def dump_selected(self):
+        return self.input.b
+    def drive_selected(self):
+        return self.input.x
+    def auto_selected(self):
+        return self.input.y
