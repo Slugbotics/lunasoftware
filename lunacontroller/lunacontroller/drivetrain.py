@@ -60,4 +60,4 @@ class Drivetrain:
         self.tank_drive(0.0, 0.0)
 
 # Use this instead of creating multiple instances of Drivetrain
-driveTrainInstance = Drivetrain()    
+drivetrainInstance = Drivetrain()    
