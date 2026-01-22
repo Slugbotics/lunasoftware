@@ -1,22 +1,24 @@
 #!/bin/bash
-# Detect if Windows 10 (VcXsrv) or Windows 11 (WSLg) or Linux
-OS_NAME=$(uname -r)
+# run.sh - Start ROS2 + Webots container (GPU + WSLg / Linux)
 
+# Stop any old container
+docker rm -f rover_dev 2>/dev/null || true
+
+# Detect OS and set DISPLAY
+OS_NAME=$(uname -r)
 if [[ "$OS_NAME" == *"microsoft"* ]]; then
     # Inside WSL
-    WIN_VER=$(cmd.exe /c ver | tr -d '\r')
-    if [[ "$WIN_VER" == *"10."* ]]; then
-        echo "Windows 10 detected: using VcXsrv for GUI"
-        export HOST_DISPLAY=host.docker.internal:0.0
-    else
-        echo "Windows 11 detected: using WSLg"
-        export HOST_DISPLAY=$DISPLAY
-    fi
+    HOST_DISPLAY=$DISPLAY
 else
     # Linux / Mac
-    export HOST_DISPLAY=$DISPLAY
+    HOST_DISPLAY=$DISPLAY
 fi
 
-# Start container and open bash
-docker compose up -d
-docker exec -it rover_dev bash
+# Start container with GPU support
+docker run -it \
+  -e DISPLAY=$DISPLAY \
+  -v /mnt/wslg/.X11-unix:/tmp/.X11-unix \
+  -v $(pwd)/workspace:/workspace \
+  --name rover_dev \
+  docker-rover \
+  bash

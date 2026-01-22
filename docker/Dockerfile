@@ -1,10 +1,7 @@
-# Base image: ROS2 Jazzy Desktop
+# Base ROS2 Jazzy Desktop
 FROM osrf/ros:jazzy-desktop
 
-ENV DEBIAN_FRONTEND=noninteractive
-ENV ROS_DISTRO=jazzy
-
-# Install basic development tools and dependencies
+# Install basic dev tools
 RUN apt update && apt install -y \
     git \
     nano \
@@ -13,26 +10,26 @@ RUN apt update && apt install -y \
     python3-colcon-common-extensions \
     python3-rosdep \
     python3-pip \
-    lsb-release \
-    gnupg2 \
-    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
 # Initialize rosdep
 RUN rosdep init || true
 RUN rosdep update
 
-# Install Webots directly from official .deb
-RUN wget https://github.com/cyberbotics/webots/releases/download/R2025b/webots_2025b_amd64.deb -O /tmp/webots.deb \
-    && dpkg -i /tmp/webots.deb || apt-get install -f -y \
-    && rm /tmp/webots.deb
+# Install dependencies for Webots GUI
+RUN apt update && apt install -y \
+    libxcb1 libxcb-xinerama0 libxcb-cursor0 libx11-xcb1 \
+    libxrender1 libxext6 libxi6 libxrandr2 libxfixes3 libxcursor1 \
+    libxcomposite1 libxdamage1 libxss1 libglu1-mesa
 
-# Optional: Install ROS2 Webots bridge (if available for Jazzy)
-# If not in repo, build from source in /workspace/src later
-RUN apt update && apt install -y ros-jazzy-webots-ros2 || true
+# Install Webots from Cyberbotics official repo
+RUN mkdir -p /etc/apt/keyrings && \
+    wget -qO /etc/apt/keyrings/Cyberbotics.asc https://cyberbotics.com/Cyberbotics.asc && \
+    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/Cyberbotics.asc] https://cyberbotics.com/debian binary-amd64/" \
+        > /etc/apt/sources.list.d/Cyberbotics.list && \
+    apt update && \
+    apt install -y webots && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set workspace
 WORKDIR /workspace
-
-# Auto-source ROS2 on container start
-RUN echo "source /opt/ros/jazzy/setup.bash" >> /root/.bashrc
