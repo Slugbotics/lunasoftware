@@ -1,0 +1,13 @@
+services:
+  rover:
+    build: .
+    container_name: rover_dev
+    tty: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - ../src:/workspace/src
+      - ../webots:/workspace/webots
+    network_mode: host
+
