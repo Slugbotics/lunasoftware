@@ -8,6 +8,5 @@ services:
       - QT_X11_NO_MITSHM=1
     volumes:
       - ../src:/workspace/src
-      - ../webots:/workspace/webots
     network_mode: host
 
