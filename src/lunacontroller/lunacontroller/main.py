@@ -8,10 +8,13 @@ from lunacontroller.dump import Dump
 from lunacontroller.drive import Drive
 from lunacontroller.auto import Auto
 import lunacontroller.constants as constants
+from lunacontroller import arm, drivetrain
 
 class MainNode(Node):
     def __init__(self):
         super().__init__('main_node')
+        arm.create_arm(self)
+        drivetrain.create_drivetrain(self)
         self.commands = {
             'disabled': Command(self),
             'teleop': Teleop(self),
