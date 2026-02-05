@@ -1,0 +1,202 @@
+ROVER SOFTWARE ONBOARDING GUIDE
+Windows 11 + Docker + ROS 2 + Webots
+---------------------------------------------------------
+OVERVIEW
+This setup uses:
+ROS 2 Jazzy running inside a Docker container
+Docker runs inside WSL2 (Ubuntu)
+Code is edited in VS Code connected to WSL
+Webots running natively on Windows (previous git push in ROS branch installed with Docker
+// off the top of my head, look at git commit message)
+---------------------------------------------------------
+PREREQUISITES (INSTALL ONCE)
+
+WSL2:
+Ubuntu 22.04 or newer
+Git
+Docker CLI access inside WSL
+//VS Code with “Remote - WSL” extension
+
+ONE-TIME WSL SETUP
+Open Ubuntu (WSL), then run:
+
+$sudo apt update
+$sudo apt install -y git docker-compose
+
+Verify Docker works:
+$docker --version
+$docker compose version
+---------------------------------------------------------
+Install Docker Desktop (on your local machine not in wsl)
+Download from:
+https://www.docker.com/products/docker-desktop/
+
+During installation:
+Enable WSL2
+Use Linux containers
+Restart when prompted.
+
+Verify installation (in powershell):
+docker --version
+---------------------------------------------------------
+Install VS Code (on your local machine not in wsl)
+Download from:
+https://code.visualstudio.com/
+
+Install these extensions:
+Docker
+Remote Development
+Dev Containers
+Python
+ROS
+Remote - WSL
+---------------------------------------------------------
+Install Webots (Windows Version)
+//on your local machine not in wsl, testing if can install within docker container
+Download from:
+https://cyberbotics.com/#download
+
+Install the Windows version.
+Launch Webots once to confirm it works.
+---------------------------------------------------------
+CLONE THE REPOSITORY (WSL)
+
+From WSL:
+$cd ~
+$git clone https://github.com/Slugbotics/lunasoftware.git
+$cd lunasoftware
+
+Open VS Code from WSL:
+$code .
+
+IMPORTANT:
+Always open VS Code from WSL using code .
+Do NOT open the project from Windows Explorer.
+// This can be confusing. You will have two copies, one on your local machine that 
+// you can still open just by opening the folder in VS Code. But now there will be another
+// copy within wsl (ubuntu) you will have to allow to generate an ssh key and git config
+// the same email and name so you can git push
+---------------------------------------------------------
+CURRENT PROJECT STRUCTURE
+rover#lunasoftware/
+├── docker/
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── run.sh
+├── src/               # ROS2 workspace as well
+│   ├── lunacontroller/
+│   └── messages/
+├── webots/            # might be gone now, will be seperate for possible cloud simulation
+│   ├── worlds/
+│   └── protos/
+├── .gitignore
+└── README.md
+
+---------------------------------------------------------
+START THE ROS 2 DOCKER ENVIRONMENT
+
+From WSL (within lunasofware folder now):
+$cd ~
+$cd lunasoftware
+$cd docker
+$bash run.sh
+
+If bash run.sh fails you need to give exectuble permission
+$chmod +x run.sh
+
+Now trying running the bash script again
+$bash run.sh
+
+This will:
+Build the ROS 2 Docker image (installing ros2 jazzy, needed apt packages, and previously webots)
+Start the container
+Mount the workspace volume from the GitHub repo
+Open a shell inside the container
+
+You should see something like:
+root@rover_dev:/workspace#
+---------------------------------------------------------
+TESTING ROS2
+Inside the container:
+root@rover_dev:/workspace#source /opt/ros/jazzy/setup.bash
+root@rover_dev:/workspace#ros2 topic list
+root@rover_dev:/workspace#ros2 run demo_nodes_cpp talker
+
+TO OPEN NEW SHELLS WITH THE SAME CONTAINER:
+In a new terminal (wsl) run:
+$docker exec -it rover_dev bash
+// Possible that it fails due to configuration of docker-compose.yaml
+
+Now you can run the other demo node to see if they communicate while
+keeping your other terminal for talker:
+root@rover_dev:/workspace#ros2 run demo_nodes_cpp listener
+---------------------------------------------------------
+BUILD AND RUN ROS 2 (INSIDE DOCKER CONTAINER)
+
+Inside the container:
+root@rover_dev:/workspace#source /opt/ros/jazzy/setup.bash
+root@rover_dev:/workspace#colcon build
+root@rover_dev:/workspace#source install/setup.bash
+
+Run ROS 2 nodes:
+root@rover_dev:/workspace#ros2 launch <your_package> <your_launch_file>.launch.py
+Leave this running.
+---------------------------------------------------------
+IF USING REPO VERSION WHERE WEBOTS IS INSTALLED IN DOCKER CONTAINER
+
+Open the program with:
+root@rover_dev:/workspace#webots
+
+It will start, opening a new window and possibly give error that graphics driver is not sufficient
+It froze for me so I would close it by clicking the x button on the top right corner of the window
+---------------------------------------------------------
+EDITING CODE
+
+Open the rover folder in VS Code
+Code is located in:
+rover\src\ #rover = lunasoftware
+
+Changes appear instantly inside Docker
+Rebuild when needed:
+colcon build
+---------------------------------------------------------
+SAVING AND SHARING WORK
+
+Your code is saved on your local machine(wsl), not inside Docker.
+
+To commit changes (can also open terminal in vscode):
+$git status
+$git add .
+$git commit -m "Describe your changes"
+$git push
+---------------------------------------------------------
+STOPPING EVERYTHING
+
+Exit the container:
+root@rover_dev:/workspace#exit
+
+Stop Docker services (or can shutdown docker desktop on your machine, in your hidden icons
+on bottom right corner of windows bar):
+docker compose down
+---------------------------------------------------------
+NOTES
+
+Webots runs on Windows (PREVIOUSLY tried installing but I don't think #workspace is mapped properly to the github folders so
+
+// look at git commit bda2e53e1be6ffc92d35f676956dfc21302c42d5
+ROS 2 runs in Docker
+Code is shared through a mounted workspace
+Networking uses localhost automatically
+Possible that local changes won't be saved (i.e. when you exit the Docker container your changes would be gone but
+this shouldn't happen since theres a volume (#workspace) mounted that should save even if you don't push to git)
+---------------------------------------------------------
+COMMON ISSUES
+
+------>THIS TXT FILE IS A WORK IN PROGRESS BEWARE ALL COMMANDS <----------
+
+Docker will not start:
+Restart Docker Desktop
+
+Ensure WSL2 is enabled
+---------------------------------------------------------
+END OF GUIDE
