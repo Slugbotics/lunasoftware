@@ -16,20 +16,12 @@ RUN apt update && apt install -y \
 RUN rosdep init || true
 RUN rosdep update
 
-# Install dependencies for Webots GUI
+# Install dependencies for GUI (for Webots to display)
 RUN apt update && apt install -y \
     libxcb1 libxcb-xinerama0 libxcb-cursor0 libx11-xcb1 \
     libxrender1 libxext6 libxi6 libxrandr2 libxfixes3 libxcursor1 \
-    libxcomposite1 libxdamage1 libxss1 libglu1-mesa
-
-# Install Webots from Cyberbotics official repo
-RUN mkdir -p /etc/apt/keyrings && \
-    wget -qO /etc/apt/keyrings/Cyberbotics.asc https://cyberbotics.com/Cyberbotics.asc && \
-    echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/Cyberbotics.asc] https://cyberbotics.com/debian binary-amd64/" \
-        > /etc/apt/sources.list.d/Cyberbotics.list && \
-    apt update && \
-    apt install -y webots && \
-    rm -rf /var/lib/apt/lists/*
+    libxcomposite1 libxdamage1 libxss1 libglu1-mesa \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set workspace
 WORKDIR /workspace

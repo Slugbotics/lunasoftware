@@ -1,7 +1,7 @@
 from lunacontroller.command import Command
-from lunacontroller.drivetrain import drivetrainInstance
-from lunacontroller.arm import armInstance
+from lunacontroller import arm, drivetrain
 from messages.msg import ControllerInput
+from std_msgs.msg import String
 
 MIN_ARM_ANGLE = 0
 MAX_ARM_ANGLE = 180
@@ -22,8 +22,8 @@ class Teleop(Command):
     def __init__(self, node):
         super().__init__(node)
         # Initialize all variables
-        self.drivetrain = drivetrainInstance
-        self.arm = armInstance
+        self.drivetrain = drivetrain.drivetrainInstance
+        self.arm = arm.armInstance
         self.subscriber = None
         self.input = ControllerInput()
     
@@ -31,23 +31,40 @@ class Teleop(Command):
         """Runs once when the command starts"""
         self.armAngle = 90
         self.arm.set_angle(self.armAngle)
-        self.subscriber = self.node.create_subscription("controller_input", ControllerInput, self.joystick_callback, 10)
-        self.input = ControllerInput()
+        self.subscriber = self.node.create_subscription(ControllerInput, "controller_input", self.joystick_callback, 10)
+        self.keyboard_subscriber = self.node.create_subscription(String, "/keyboard", self.keyboard_callback, 10)
+        self.input = None
+        self.keys = None
     
     def execute(self):
         """Runs repeatedly while the command is active"""
-        if self.input is None:
-            return
-
-        speed = -self.input.left_y
-        # Multiply by absolute value to make control less sensitive near 0
-        # All speeds are still possible, since speed * abs(speed) covers [-1, 1]
-        speed = speed * abs(speed)
-        # Same thing for robot rotation and arm movement
-        rotation = -self.input.left_x
-        rotation = rotation * abs(rotation)
-        armSpeed = -self.input.right_y
-        armSpeed = ARM_ANGLE_RATE * armSpeed * abs(armSpeed)
+        speed = 0
+        rotation = 0
+        armSpeed = 0
+        if self.input is not None:
+            speed = -self.input.left_y
+            # Multiply by absolute value to make control less sensitive near 0
+            # All speeds are still possible, since speed * abs(speed) covers [-1, 1]
+            speed = speed * abs(speed)
+            # Same thing for robot rotation and arm movement
+            rotation = -self.input.left_x
+            rotation = rotation * abs(rotation)
+            armSpeed = -self.input.right_y
+            armSpeed = ARM_ANGLE_RATE * armSpeed * abs(armSpeed)
+        elif self.keys is not None:
+            # Keyboard controls
+            if 'w' in self.keys:
+                speed += 1
+            if 's' in self.keys:
+                speed -= 1
+            if 'a' in self.keys:
+                rotation += 1
+            if 'd' in self.keys:
+                rotation -= 1
+            if 'i' in self.keys:
+                armSpeed += ARM_ANGLE_RATE
+            if 'k' in self.keys:
+                armSpeed -= ARM_ANGLE_RATE
         # Store the arm angle to make the servo trun to
         self.armAngle += armSpeed
         # Clamp the arm angle and send commands to the motors
@@ -67,6 +84,8 @@ class Teleop(Command):
 
     def joystick_callback(self, msg):
         self.input = msg
+    def keyboard_callback(self, msg):
+        self.keys = msg.data
     
     """
     Other button mapping:
@@ -76,10 +95,10 @@ class Teleop(Command):
     Y = autonomous mode
     """
     def dig_selected(self):
-        return self.input.a
+        return self.input is not None and self.input.a
     def dump_selected(self):
-        return self.input.b
+        return self.input is not None and self.input.b
     def drive_selected(self):
-        return self.input.x
+        return self.input is not None and self.input.x
     def auto_selected(self):
-        return self.input.y
+        return self.input is not None and self.input.y

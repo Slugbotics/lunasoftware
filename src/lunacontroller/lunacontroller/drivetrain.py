@@ -1,14 +1,18 @@
-"""Drivetrain hardware interface with optional console simulation.
-
-This file provides a Drivetrain class with a small simulation mode so code
-that depends on it (like the tester or teleop) can run without a serial
-device.
-"""
-
 from typing import Optional
+import warnings
+
+try:
+    from gpiozero import Device
+    from gpiozero.pins.pigpio import PiGPIOFactory
+    Device.pin_factory = PiGPIOFactory()
+except Exception as e:
+    warnings.warn(f'PiGPIOFactory unavailable, gpiozero will select default pin factory: {e}')
+
 from gpiozero import Motor
 from lunacontroller.geometry import Pose2d
 from lunacontroller.geometry import Pose2d
+from rclpy.node import Node
+from std_msgs.msg import Float64
 
 BOARD_TO_BCM = {
     1: None, 2: None, 3: 2,  4: None, 5: 3,  6: None, 7: 4,  8: 14,
@@ -27,12 +31,23 @@ class Drivetrain:
     """
     Represents the drivetrain subsystem.
     """
-    def __init__(self):
+    def __init__(self, node):
+        self.node = node
+
         # Create motors
-        self.leftMotor1 = Motor(forward=BOARD_TO_BCM[10], backward=BOARD_TO_BCM[12], enable=BOARD_TO_BCM[8])
-        self.rightMotor1 = Motor(forward=BOARD_TO_BCM[13], backward=BOARD_TO_BCM[15], enable=BOARD_TO_BCM[11])
-        self.leftMotor2 = Motor(forward=BOARD_TO_BCM[38], backward=BOARD_TO_BCM[40], enable=BOARD_TO_BCM[36])
-        self.rightMotor2 = Motor(forward=BOARD_TO_BCM[31], backward=BOARD_TO_BCM[33], enable=BOARD_TO_BCM[29])
+        try:
+            self.leftMotor1 = Motor(forward=BOARD_TO_BCM[10], backward=BOARD_TO_BCM[12], enable=BOARD_TO_BCM[8])
+            self.rightMotor1 = Motor(forward=BOARD_TO_BCM[13], backward=BOARD_TO_BCM[15], enable=BOARD_TO_BCM[11])
+            self.leftMotor2 = Motor(forward=BOARD_TO_BCM[38], backward=BOARD_TO_BCM[40], enable=BOARD_TO_BCM[36])
+            self.rightMotor2 = Motor(forward=BOARD_TO_BCM[31], backward=BOARD_TO_BCM[33], enable=BOARD_TO_BCM[29])
+        except Exception:
+            self.leftMotor1 = None
+            self.rightMotor1 = None
+            self.leftMotor2 = None
+            self.rightMotor2 = None
+            self.node.get_logger().warning('Drivetrain is running as simulation')
+            self.left_publisher = self.node.create_publisher(Float64, '/left_speed', 10)
+            self.right_publisher = self.node.create_publisher(Float64, '/right_speed', 10)
         self.stop()
 
     def tank_drive(self, left: float, right: float) -> None:
@@ -42,10 +57,18 @@ class Drivetrain:
         """
         left = _clamp(left)
         right = _clamp(right)
-        self.leftMotor1.value = left
-        self.rightMotor1.value = right
-        self.leftMotor2.value = left
-        self.rightMotor2.value = right
+        if self.leftMotor1 is not None:
+            self.leftMotor1.value = left
+            self.rightMotor1.value = right
+            self.leftMotor2.value = left
+            self.rightMotor2.value = right
+        else:
+            msg_left = Float64()
+            msg_right = Float64()
+            msg_left.data = float(left)
+            msg_right.data = float(right)
+            self.left_publisher.publish(msg_left)
+            self.right_publisher.publish(msg_right)
 
     def drive(self, speed: float, rotation: float) -> None:
         """Drives the robot using speed and rotation values.
@@ -66,4 +89,7 @@ class Drivetrain:
         return Pose2d(1, 2, 3)
 
 # Use this instead of creating multiple instances of Drivetrain
-drivetrainInstance = Drivetrain()    
+drivetrainInstance = None
+def create_drivetrain(node):
+    global drivetrainInstance
+    drivetrainInstance = Drivetrain(node)    
