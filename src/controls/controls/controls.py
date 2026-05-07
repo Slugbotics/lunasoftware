@@ -3,6 +3,7 @@ from rclpy.node import Node
 from messages.msg import ControllerInput
 import pygame
 from std_srvs.srv import Empty
+from controls.camera import Camera
 
 class ControlsNode(Node):
     def __init__(self):
@@ -18,6 +19,7 @@ class ControlsNode(Node):
         self.cancel_pressed = False
         if self.joystick is None:
             self.get_logger().warning('No joystick connected at startup.')
+        self.camera = Camera(self, '/camera')
 
     def timer_callback(self):
         pygame.event.pump()
@@ -77,6 +79,6 @@ def main(args=None):
         if rclpy.ok():
             rclpy.shutdown()
         pygame.quit()
-
+        node.camera.close()
 if __name__ == '__main__':
     main()

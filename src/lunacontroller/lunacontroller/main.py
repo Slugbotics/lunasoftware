@@ -9,6 +9,7 @@ from lunacontroller.drive import Drive
 from lunacontroller.auto import Auto
 import lunacontroller.constants as constants
 from lunacontroller import arm, drivetrain
+from lunacontroller.camera import Camera
 
 class MainNode(Node):
     def __init__(self):
@@ -24,13 +25,14 @@ class MainNode(Node):
             'auto': Auto(self)
         }
         self.command = self.commands['disabled']
-        self.get_logger().info('MainNode initialized')
         self.timer = self.create_timer(0.02, self.timer_callback)
         self.cancel_service = self.create_service(
             Empty,
             'cancel_command',
             self.cancel_command_callback
         )
+        self.camera = Camera(self, '/camera', constants.CAMERA_ID)
+        self.get_logger().info('MainNode initialized')
 
     def set_command(self, command):
         self.command.end()
@@ -47,6 +49,7 @@ class MainNode(Node):
         elif self.command == self.commands['disabled']:
             self.set_command(self.commands['teleop'])
         self.command.execute()
+        self.camera.update()
         if type(self.command) == Teleop:
             if self.command.dig_selected():
                 self.set_command(self.commands['dig'])
@@ -70,6 +73,7 @@ def main(args=None):
     except KeyboardInterrupt:
         print()
     finally:
+        node.camera.close()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
