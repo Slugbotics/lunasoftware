@@ -34,6 +34,7 @@ class Camera:
     def image_callback(self, msg):
         try:
             frame = imgmsg_to_cv2(msg)
+            frame = cv2.resize(frame, (640, 480))
             cv2.imshow(f'{self.topic[1:]}', frame)
             cv2.waitKey(1)
         except Exception as e:
